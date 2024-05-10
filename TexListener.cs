@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public partial class TexListener : TextureRect
 {
@@ -8,10 +9,12 @@ public partial class TexListener : TextureRect
 	private string iso;
 
 	private string prevImageName;
+
+	private Dictionary<string, Texture2D> _loadedTextures = new Dictionary<string, Texture2D>();
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-
+	
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -21,19 +24,37 @@ public partial class TexListener : TextureRect
 
 	private void UpdateImage()
 	{
-		string s = GetImageName();
+		string s = GetImagePath();
 		if (prevImageName == s)
 		{
 			return;
 		}
 
+		if (_loadedTextures.TryGetValue(s, out var texture))
+		{
+			Texture = texture;
+		}
+		else
+		{
+			GD.Print("Load Image: " + s);
+			if (ResourceLoader.Exists(s))
+			{
+				_loadedTextures[s] = GD.Load<Texture2D>(s);
+				Texture = _loadedTextures[s];
+			}
+			else
+			{
+				//:(
+			}
+		}
+
 		prevImageName = s;
-		GD.Print("Load Image: "+s);
+		this.QueueRedraw();
 	}
 
-	private string GetImageName()
+	private string GetImagePath()
 	{
-		return $"{ss}_{aperture}_{iso}.jpg";
+		return $"res://images/s{ss}_a{aperture}_iso{iso}.jpg";
 	}
 	private void _on_ss_on_value_changed(string newValue)
 	{
